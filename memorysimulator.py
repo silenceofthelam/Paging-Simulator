@@ -104,7 +104,6 @@ def main(argv):
 
   global totalFrames
   totalFrames = 512 / pagesize
-
   if argv[3] == 'lru':
     swapalgo = lru
   elif argv[3] == 'fifo':
@@ -157,6 +156,35 @@ def main(argv):
 
     framelist[pages[pagetable][pageentry]].referenceBit = True
     framelist[pages[pagetable][pageentry]].lastUsed = globalCounter
+
+    if pagingstyle == 'p':
+      if pageentry == len(pages[pagetable]) - 1:
+        frameIndex = pages[pagetable][pageentry]
+        if frameIndex == totalFrames - 1:
+          frameIndex = 0
+        framelist[frameIndex].lastUsed = 0
+        framelist[frameIndex].referenceBit = False
+        queuePointer += 1
+        if queuePointer == totalFrames:
+          queuePointer = 0
+        continue
+      pageentry += 1
+      if pages[pagetable][pageentry] == -1:
+        if frameListFull:
+          swapalgo(pagetable, pageentry)
+        else:
+          pages[pagetable][pageentry] = queuePointer
+          framelist.append(frameEntry.frameEntry(pagetable, pageentry, globalCounter))
+          queuePointer += 1
+          if queuePointer == totalFrames:
+            queuePointer = 0
+            frameListFull = True
+
+      framelist[pages[pagetable][pageentry]].referenceBit = True
+      framelist[pages[pagetable][pageentry]].lastUsed = globalCounter
+      
+
+      
 
   print 'Total Swaps: '
   print totalSwaps
